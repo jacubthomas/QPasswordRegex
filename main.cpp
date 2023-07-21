@@ -74,8 +74,11 @@ QList<QString> passwordGenerator()
         password.append(uppercaseAlphabet.at(QRandomGenerator::global()->bounded(0, uppercaseAlphabet.size())));
         password.append(digits.at(QRandomGenerator::global()->bounded(0, digits.size())));
         password.append(symbol);
-        password.append("aaaa");
-        passwordList.append(password);
+        while (password.size() < 25)
+        {   password.append('a');
+            if (password.size() >= 8)
+                passwordList.append(password);
+        }
     }
 
     qInfo() << "PasswordList size = " << passwordList.size() << ", Symbols size = " << symbols.size();
