@@ -34,20 +34,40 @@ const QRegularExpression charRequirementsExpression("("
                                                     "(?=.*[\\[\\$\\(\\)\\*\\+\\.\\?\\[\\]\\^\\{\\}\\|\\\\:;\"'%@!#&<>=/-_`,~ ])"
                                                     ")");
 
+/*
+ * ^(                                                                            - beginning of new line
+ * (?=.*[a-z])                                                                   - at least one lowercase
+ * (?=.*[A-Z])                                                                   - at least one uppercase
+ * (?=.*[0-9])                                                                   - at least one digit
+ * (?=.*[\\[\\$\\(\\)\\*\\+\\.\\?\\[\\]\\^\\{\\}\\|\\\\:;\"'%@!#&<>=/-_`,~ ])    - at least one special symbol
+ * ).{8,25}$                                                                     - inner match check min/max characters + end of line
+ *
+ * Note \\S for symbols does not pass all cases, use explicit long string
+ */
+const QRegularExpression charAndLengthRequirementsExpression("(^"
+                                                             "(?=.*[a-z])"
+                                                             "(?=.*[A-Z])"
+                                                             "(?=.*[0-9])"
+                                                             "(?=.*[\\[\\$\\(\\)\\*\\+\\.\\?\\[\\]\\^\\{\\}\\|\\\\:;\"'%@!#&<>=/-_`,~ ])"
+                                                             ").{8,25}$");
+
+
 bool passwordValidator(const QString password)
 {
 
     // perform check
     bool matchOnChars = charRequirementsExpression.match(password).hasMatch();
     bool matchOnLength = lengthRequirementsExpression.match(password).hasMatch();
-    bool result = matchOnChars && matchOnLength;
+    bool matchOnBoth = charAndLengthRequirementsExpression.match(password).hasMatch();
+    bool result = matchOnChars && matchOnLength && matchOnBoth;
 
     // print results
-    qInfo() << QString("Input password: %1, RESULT = %2, password matches characters: %3, password matches length: %4")
+    qInfo() << QString("Input password: %1, RESULT = %2, password matches characters: %3, password matches length: %4, password mathches both: %5")
                    .arg(password)
                    .arg((result) ? "True" : "False")
                    .arg((matchOnChars) ? "True" : "False")
-                   .arg((matchOnLength) ? "True" : "False");
+                   .arg((matchOnLength) ? "True" : "False")
+                   .arg((matchOnBoth) ? "True" : "False");
     return result;
 }
 
@@ -74,9 +94,9 @@ QList<QString> passwordGenerator()
         password.append(uppercaseAlphabet.at(QRandomGenerator::global()->bounded(0, uppercaseAlphabet.size())));
         password.append(digits.at(QRandomGenerator::global()->bounded(0, digits.size())));
         password.append(symbol);
-        while (password.size() < 25)
+        while (password.size() < 26)        //! intentionally making 1 unit too large
         {   password.append('a');
-            if (password.size() >= 8)
+            if (password.size() >= 7)       //! intentionally making 1 unit too small
                 passwordList.append(password);
         }
     }
@@ -89,7 +109,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    //    getPasswordsFromCommandLine();
+    // getPasswordsFromCommandLine();
 
     QList<QString> passwords = passwordGenerator();
 
@@ -107,6 +127,7 @@ int main(int argc, char *argv[])
                    .arg(successfulMatch)
                    .arg(failedMatch);
 
+    qFatal("");
 
     return a.exec();
 }
